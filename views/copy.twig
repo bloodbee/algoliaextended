@@ -1,0 +1,33 @@
+{% extends 'layout.twig' %}
+
+{% block body %}
+<section class="highlight">
+    <p>Algolia Extended give you the power to copy fully or partially environment into an other. You can choose which index you want, with or without datas, with or without settings.<p>
+    <p>For this you need to have a new created environment cleaned (use <a href="/clear">Clear</a> to do that), and the APP ID and ADMIN API KEYS for your source and target environment.</p>
+</section>
+
+<form method="post" action="/copy" id="form-copy" class="highlight form">
+    <div class="form-group">
+        <label for="source_app_id">Source App Id</label>
+        <input type="text" name="source_app_id" id="source_app_id" />
+    </div>
+    <div class="form-group">
+        <label for="source_admin_key">Source Admin Key</label>
+        <input type="text" name="source_app_key" id="source_admin_key" />
+    </div>
+    <div class="form-group">
+        <label for="target_app_id">Target App Id</label>
+        <input type="text" name="target_app_id" id="target_app_id" />
+    </div>
+    <div class="form-group">
+        <label for="target_admin_key">Target Admin Key</label>
+        <input type="text" name="target_app_key" id="target_admin_key" />
+    </div>
+
+    <div class="form-group form-buttons">
+        <button type="reset" class="button-left">Reset</button>
+        <button type="submit" class="button-right">Submit</button>
+    </div>
+
+</form>
+{% endblock %}
