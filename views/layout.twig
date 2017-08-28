@@ -27,9 +27,16 @@
             <div class="nav-element">
                 <a href="/clear">Clear</a>
             </div>
+            <!-- <div class="nav-element">
+                <a href="/clear">Export</a>
+            </div> -->
         </nav>
         <div id="container">
+            {% block alert %}{% endblock %}
             {% block body %}{% endblock %}
         </div>
+
+        <script type="text/javascript" src="/javascripts/jquery-2.2.1.min.js"></script>
+        {% block js %}{% endblock %}
     </body>
 </html>

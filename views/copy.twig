@@ -1,33 +1,87 @@
 {% extends 'layout.twig' %}
 
+{% block alert %}
+
+{% if errors|length > 0 %}
+    <div class="alert alert-error">
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% if message %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endif %}
+
+{% endblock %}
+
 {% block body %}
 <section class="highlight">
     <p>Algolia Extended give you the power to copy fully or partially environment into an other. You can choose which index you want, with or without datas, with or without settings.<p>
-    <p>For this you need to have a new created environment cleaned (use <a href="/clear">Clear</a> to do that), and the APP ID and ADMIN API KEYS for your source and target environment.</p>
+    <p>For this you need to have a new created environment cleaned (using <a href="/clear">Clear</a>), and the APP ID and ADMIN API KEYS for your source and target environment.</p>
 </section>
 
 <form method="post" action="/copy" id="form-copy" class="highlight form">
     <div class="form-group">
         <label for="source_app_id">Source App Id</label>
-        <input type="text" name="source_app_id" id="source_app_id" />
+        <input type="text" class="input" name="source_app_id" required id="source_app_id" />
     </div>
     <div class="form-group">
-        <label for="source_admin_key">Source Admin Key</label>
-        <input type="text" name="source_app_key" id="source_admin_key" />
+        <label for="source_app_key">Source Admin Key</label>
+        <input type="text" class="input" name="source_app_key" required id="source_app_key" />
     </div>
     <div class="form-group">
         <label for="target_app_id">Target App Id</label>
-        <input type="text" name="target_app_id" id="target_app_id" />
+        <input type="text" class="input" name="target_app_id" required id="target_app_id" />
     </div>
     <div class="form-group">
-        <label for="target_admin_key">Target Admin Key</label>
-        <input type="text" name="target_app_key" id="target_admin_key" />
+        <label for="target_app_key">Target Admin Key</label>
+        <input type="text" class="input" name="target_app_key" required id="target_app_key" />
+    </div>
+    <div class="form-group options">
+        <div class="option">
+            <label for="copy_override">Override targeted environment ?</label>
+            <input type="checkbox" checked="checked" name="copy_override" id="copy_override" />
+        </div>
+    </div>
+    <div class="form-group options">
+        <div class="option">
+            <label for="copy_settings">Copy settings ?</label>
+            <input type="checkbox" checked="checked" name="copy_settings" id="copy_settings" />
+        </div>
+    </div>
+    <div class="form-group options">
+        <div class="option">
+            <label for="copy_datas">Copy datas ?</label>
+            <input type="checkbox" checked="checked" name="copy_datas" id="copy_datas" />
+        </div>
+        <div class="option" id="option-limit">
+            <label for="limit">Limit</label>
+            <input type="number" class="input margin-left-50" name="limit" id="limit" value="10000" min="0" />
+        </div>
     </div>
 
     <div class="form-group form-buttons">
         <button type="reset" class="button-left">Reset</button>
-        <button type="submit" class="button-right">Submit</button>
+        <button type="submit" id="copy-submit" class="button-right">Submit</button>
     </div>
-
 </form>
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#copy_datas').change(function() {
+                if ($(this).prop('checked') == false) {
+                    $('#option-limit').css('display', 'none');
+                } else {
+                    $('#option-limit').css('display', 'flex');
+                }
+            });
+        });
+    </script>
 {% endblock %}
