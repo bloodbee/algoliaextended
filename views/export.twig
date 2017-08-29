@@ -1,0 +1,56 @@
+{% extends 'layout.twig' %}
+
+{% block alert %}
+
+{% if errors|length > 0 %}
+    <div class="alert alert-error">
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% if message %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block body %}
+<section class="highlight">
+    <p>Algolia Extended give you the power to export into json format, with settings and datas.<p>
+    <p>You can then use this json file into our <a href="#">Import</a> feature, for a new environment for example.</p>
+</section>
+
+<form method="post" action="/export" id="form-export" class="highlight form">
+    <div class="form-group">
+        <label for="app_id">App Id</label>
+        <input type="text" class="input" name="app_id" required id="app_id" />
+    </div>
+    <div class="form-group">
+        <label for="app_key">Admin Key</label>
+        <input type="password" class="input" name="app_key" required id="app_key" />
+    </div>
+    <div class="form-group options">
+        <div class="option">
+            <label for="export_settings">Export settings ?</label>
+            <input type="checkbox" checked="checked" name="export_settings" id="export_settings" />
+        </div>
+    </div>
+    <div class="form-group options">
+        <div class="option">
+            <label for="export_datas">Export datas ?</label>
+            <input type="checkbox" checked="checked" name="export_datas" id="export_datas" />
+        </div>
+    </div>
+
+    <div class="form-group form-buttons">
+        <button type="reset" class="button-left">Reset</button>
+        <button type="submit" id="copy-submit" class="button-right">Submit</button>
+    </div>
+</form>
+
+{% endblock %}

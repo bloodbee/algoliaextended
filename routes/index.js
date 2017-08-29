@@ -5,6 +5,12 @@ let algoliasearch = require('algoliasearch');
 
 let async = require("async");
 
+let fs = require('fs');
+
+let jsonfile = require('jsonfile');
+
+jsonfile.spaces = 4;
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index');
@@ -208,6 +214,124 @@ router.post('/clear', function(req, res, next) {
     ], function(err) {
         res.render('clear', {errors: errors, message: message});
     });
+});
+
+/* GET copy */
+router.get('/export', function(req, res, next) {
+    res.redirect('/');
+    // res.render('export');
+});
+
+/* POST copy */
+router.post('/export', function(req, res, next) {
+    let errors = [];
+    let message = null;
+
+    let app_id = req.body.app_id;
+    let app_key = req.body.app_key;
+
+    let export_settings = false; if (req.body.export_settings) export_settings = true;
+    let export_datas = false; if (req.body.export_datas) export_datas = true;
+
+    let client = null;
+    if (app_id && app_key)
+        client = algoliasearch(app_id, app_key); // destination
+    else errors.push('Please provide an app id and an admin api key.');
+
+    if (client) {
+        // check access to storage
+        fs.access('./storage', fs.constants.R_OK | fs.constants.W_OK, (err) => {
+            if (err) throw err;
+            else console.log('can read/write');
+        });
+        // generate file name
+        let file = './storage/'+app_id+'-'+Math.floor(new Date() / 1000)+'.json';
+
+
+        async.series([
+            function(callback) {
+                let datas = [];
+                // first get source list index
+                client.listIndexes((err, content) => {
+                    if (!err) {
+
+                        async.forEachOf(content.items, function (value, key, callback3) {
+                            let obj = {
+                                name: value.name
+                            };
+
+                            // mount index
+                            let sourceIndex = client.initIndex(value.name);
+
+                            async.series([
+                                function(callback2) {
+                                    // copy settings
+                                    if (export_settings) {
+                                        // copy index settings
+                                        sourceIndex.getSettings((err, content2) => {
+                                            callback2(null, content2);
+
+                                        });
+                                    } else {
+                                        callback2(null, null);
+                                    }
+                                },
+                                function(callback2) {
+
+                                    // copy datas
+                                    if (export_datas) {
+                                        // browse all origin index datas
+                                        let browser = sourceIndex.browseAll();
+                                        let hits = [];
+
+                                        browser.on('result', function onResult(content) {
+                                          hits = hits.concat(content.hits);
+                                        });
+
+                                        browser.on('end', function onEnd() {
+                                          console.log('Finished!');
+                                          console.log('We got %d hits', hits.length);
+
+                                          callback2(null, hits);
+                                        });
+
+                                        browser.on('error', function onError(err) {
+                                          throw err;
+                                        });
+                                    } else {
+                                        callback2(null, null);
+                                    }
+                                }
+                            ], function(err, results) {
+                                obj.settings = results[0];
+                                obj.datas = results[1];
+                                datas.push(obj);
+                            });
+                            callback3(null);
+                        }, function(err) {
+                        });
+                    }
+                });
+                callback(null, datas);
+            }
+        ], function(err, results) {
+            let datasEnd = results[0];
+
+            console.log(datasEnd);
+
+            jsonfile.writeFile(file, datasEnd, function(err) {
+                if (err) throw err;
+
+            });
+        });
+
+    } else {
+        errors.push('Sorry, this environment doesn\'t exist.');
+    }
+
+
+
+    res.render('export', {errors: errors, message: message});
 });
 
 module.exports = router;

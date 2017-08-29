@@ -22,7 +22,7 @@
 {% block body %}
 <section class="highlight">
     <p>Algolia Extended give you the power to clear an environment. It will delete all indices presents into it.<p>
-    <p>Be aware that this can't be undone, and you will lost all your datas. We suggest you do to a BACKUP <!--(using <a href="#">Export</a>)--> !</p>
+    <p>Be aware that this can't be undone, and you will lost all your datas. We suggest you do to a BACKUP <!--an <a href="/export">Export</a>--> first!</p>
 </section>
 
 <form method="post" action="/clear" id="form-clear" class="highlight form">
@@ -32,7 +32,7 @@
     </div>
     <div class="form-group">
         <label for="target_app_key">Target Admin Key</label>
-        <input type="text" class="input" name="target_app_key" required id="target_app_key" />
+        <input type="password" class="input" name="target_app_key" required id="target_app_key" />
     </div>
 
     <div class="form-group form-buttons">
