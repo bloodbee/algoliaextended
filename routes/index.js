@@ -3,7 +3,7 @@ let router = express.Router();
 
 let algoliasearch = require('algoliasearch');
 
-let async = require("async");
+let asyncJS = require("async");
 
 let fs = require('fs');
 
@@ -56,7 +56,7 @@ router.post('/copy', function(req, res, next) {
 
     if (sourceClient && targetClient) {
 
-        async.series([
+        asyncJS.series([
             function(callback) {
                 if (copy_override) {
                     targetClient.listIndexes((err, content) => {
@@ -188,7 +188,7 @@ router.post('/clear', function(req, res, next) {
     if (target_app_id && target_app_key)
         client = algoliasearch(target_app_id, target_app_key); // destination
     else errors.push('Please provide a target app id and a target admin api key.');
-    async.series([
+    asyncJS.series([
         function(callback) {
             if (client) {
                 client.listIndexes(function(err, content) {
@@ -218,8 +218,8 @@ router.post('/clear', function(req, res, next) {
 
 /* GET copy */
 router.get('/export', function(req, res, next) {
-    res.redirect('/');
-    // res.render('export');
+    // res.redirect('/');
+    res.render('export');
 });
 
 /* POST copy */
@@ -242,28 +242,26 @@ router.post('/export', function(req, res, next) {
         // check access to storage
         fs.access('./storage', fs.constants.R_OK | fs.constants.W_OK, (err) => {
             if (err) throw err;
-            else console.log('can read/write');
         });
         // generate file name
         let file = './storage/'+app_id+'-'+Math.floor(new Date() / 1000)+'.json';
 
-
-        async.series([
+        asyncJS.series([
             function(callback) {
                 let datas = [];
                 // first get source list index
                 client.listIndexes((err, content) => {
                     if (!err) {
 
-                        async.forEachOf(content.items, function (value, key, callback3) {
+                        asyncJS.eachSeries(content.items, function (item, callback3) {
                             let obj = {
-                                name: value.name
+                                name: item.name
                             };
 
                             // mount index
-                            let sourceIndex = client.initIndex(value.name);
+                            let sourceIndex = client.initIndex(item.name);
 
-                            async.series([
+                            asyncJS.series([
                                 function(callback2) {
                                     // copy settings
                                     if (export_settings) {
@@ -289,9 +287,6 @@ router.post('/export', function(req, res, next) {
                                         });
 
                                         browser.on('end', function onEnd() {
-                                          console.log('Finished!');
-                                          console.log('We got %d hits', hits.length);
-
                                           callback2(null, hits);
                                         });
 
@@ -306,32 +301,32 @@ router.post('/export', function(req, res, next) {
                                 obj.settings = results[0];
                                 obj.datas = results[1];
                                 datas.push(obj);
+                                callback3(null);
                             });
-                            callback3(null);
                         }, function(err) {
+                            callback(null, datas);
                         });
+                    } else {
+                        callback(null, []);
                     }
                 });
-                callback(null, datas);
             }
         ], function(err, results) {
             let datasEnd = results[0];
 
-            console.log(datasEnd);
-
             jsonfile.writeFile(file, datasEnd, function(err) {
                 if (err) throw err;
-
+                res.download(file);
             });
+
+
+            message = 'The environment is exported.';
         });
 
     } else {
         errors.push('Sorry, this environment doesn\'t exist.');
+        res.render('export', {errors: errors, message: message});
     }
-
-
-
-    res.render('export', {errors: errors, message: message});
 });
 
 module.exports = router;
