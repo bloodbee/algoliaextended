@@ -314,19 +314,30 @@ router.post('/export', function(req, res, next) {
         ], function(err, results) {
             let datasEnd = results[0];
 
+            let _res = res;
+
             jsonfile.writeFile(file, datasEnd, function(err) {
                 if (err) throw err;
-                res.download(file);
+
+                res.download(file, function(err) {
+                    if (err) {
+                    // Handle error, but keep in mind the response may be partially-sent
+                    // so check res.headersSent
+                    } else {
+                        // delete the file
+                        fs.unlinkSync(file);
+                        // res.redirect('/export');
+                    }
+                });
+
             });
-
-
-            message = 'The environment is exported.';
         });
 
     } else {
         errors.push('Sorry, this environment doesn\'t exist.');
         res.render('export', {errors: errors, message: message});
     }
+
 });
 
 module.exports = router;
