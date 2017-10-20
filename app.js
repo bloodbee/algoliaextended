@@ -41,7 +41,7 @@ app.use(function(req, res, next) {
 
 //FORCE SSL
 app.use(function(req, res, next) {
-  if(!req.secure) {
+  if(req.protocol != 'https') {
     return res.redirect(['https://', req.get('Host'), req.url].join(''));
   }
   next();
