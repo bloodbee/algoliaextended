@@ -4,10 +4,11 @@ let favicon = require('serve-favicon');
 let logger = require('morgan');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
+let helmet = require('helmet')
+var express_enforces_ssl = require('express-enforces-ssl');
 
 let index = require('./routes/index');
 let users = require('./routes/users');
-let helmet = require('helmet')
 
 let csurf = require('csurf')
 
@@ -29,6 +30,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
 
+app.enable('trust proxy');
+
+app.use(express_enforces_ssl());
+
 app.use('/', index);
 app.use('/users', users);
 
@@ -39,15 +44,6 @@ app.use(function(req, res, next) {
   next(err);
 });
 
-function ensureSecure(req, res, next){
-    if(req.headers['x-forwarded-proto'] === 'https'){ // OK, continue
-        return next();
-    }
-    res.redirect('https://' + req.headers.host);
-}
-
-//FORCE SSL
-app.all('*', ensureSecure); // at top of routing calls
 
 // error handler
 app.use(function(err, req, res, next) {
