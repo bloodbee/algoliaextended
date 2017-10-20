@@ -39,6 +39,14 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+//FORCE SSL
+app.use(function(req, res, next) {
+  if(!req.secure) {
+    return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  next();
+});
+
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
