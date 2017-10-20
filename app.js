@@ -39,13 +39,15 @@ app.use(function(req, res, next) {
   next(err);
 });
 
+function ensureSecure(req, res, next){
+    if(req.headers['x-forwarded-proto'] === 'https'){ // OK, continue
+        return next();
+    }
+    res.redirect('https://' + req.headers.host);
+}
+
 //FORCE SSL
-app.use(function(req, res, next) {
-  if(req.protocol != 'https') {
-    return res.redirect(['https://', req.get('Host'), req.url].join(''));
-  }
-  next();
-});
+app.all('*', ensureSecure); // at top of routing calls
 
 // error handler
 app.use(function(err, req, res, next) {
