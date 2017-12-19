@@ -216,13 +216,12 @@ router.post('/clear', function(req, res, next) {
     });
 });
 
-/* GET copy */
+/* GET export */
 router.get('/export', function(req, res, next) {
-    // res.redirect('/');
     res.render('export');
 });
 
-/* POST copy */
+/* POST export */
 router.post('/export', function(req, res, next) {
     let errors = [];
     let message = null;
@@ -339,5 +338,53 @@ router.post('/export', function(req, res, next) {
     }
 
 });
+
+/* GET import */
+router.get('/import', function(req, res, next) {
+    res.render('import');
+});
+
+/* POST import */
+router.post('/import', function(req, res, next) {
+    let errors = [];
+    let message = null;
+
+    let app_id = req.body.app_id;
+    let app_key = req.body.app_key;
+
+    let import_file = null; if (req.body.import_file) import_file = req.body.import_file;
+
+
+
+    let client = null;
+    if (app_id && app_key)
+        client = algoliasearch(app_id, app_key); // destination
+    else errors.push('Please provide an app id and an admin api key.');
+
+    if (client) {
+        if (!import_file) {
+            errors.push('Please provide a json file to import.');
+        } else {
+            // parse imported file
+            fs.readFile(import_file, function (err, data) {
+                if (err) {
+                    throw err;
+                } else {
+                    let parsedFile = JSON.parse(data);
+
+                    let name = parsedFile.name;
+                    let settings = parsedFile.settings;
+                    let datas = parsedFile.datas;
+                }
+            });
+        }
+    } else {
+        errors.push('Sorry, this environment doesn\'t exist.');
+        res.render('export', {errors: errors, message: message});
+    }
+
+});
+
+
 
 module.exports = router;

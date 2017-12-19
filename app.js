@@ -8,7 +8,6 @@ let helmet = require('helmet')
 var express_enforces_ssl = require('express-enforces-ssl');
 
 let index = require('./routes/index');
-let users = require('./routes/users');
 
 let csurf = require('csurf')
 
@@ -30,12 +29,12 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
 
-app.enable('trust proxy');
-
-app.use(express_enforces_ssl());
+if (app.get('env') != 'development') {
+    app.enable('trust proxy');
+    app.use(express_enforces_ssl());
+}
 
 app.use('/', index);
-app.use('/users', users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -1,0 +1,49 @@
+{% extends 'layout.twig' %}
+
+{% block alert %}
+
+{% if errors|length > 0 %}
+    <div class="alert alert-error">
+        <ul>
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% if message %}
+    <div class="alert alert-success">
+        {{ message }}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block body %}
+<section class="highlight">
+    <p>Algolia Extended give you the power to import a json file to create and set a new environment from nothing.<p>
+    <p>Only json files generated via our <a href="/export">Export</a> feature are accepted.</p>
+</section>
+
+<form method="post" action="/import" id="form-import" class="highlight form" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="app_id">App Id</label>
+        <input type="text" class="input" name="app_id" required id="app_id" />
+    </div>
+    <div class="form-group">
+        <label for="app_key">Admin Key</label>
+        <input type="password" class="input" name="app_key" required id="app_key" />
+    </div>
+    <div class="form-group options">
+        <label for="import_file">File to import (.json format)</label>
+        <input type="file" class="input" name="import_file" required id="import_file" />
+    </div>
+    <div class="form-group options">
+
+    <div class="form-group form-buttons">
+        <button type="reset" class="button-left">Reset</button>
+        <button type="submit" id="copy-submit" class="button-right">Submit</button>
+    </div>
+</form>
+
+{% endblock %}
