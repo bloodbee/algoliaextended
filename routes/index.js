@@ -1,19 +1,19 @@
 let express = require('express');
 let router = express.Router();
 
-let algoliasearch = require('algoliasearch');
 
-let asyncJS = require("async");
-
+let algoliasearch = require('algoliasearch'); // Algolia js library
+let asyncJS = require("async"); // Asynchrone JS functions
 let fs = require('fs');
-
-let jsonfile = require('jsonfile');
+let jsonfile = require('jsonfile'); // handled json files
+let multer  = require('multer') // file upload
+let upload = multer({ dest: 'storage/' }) // uploaded dist dir
 
 jsonfile.spaces = 4;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index');
+    res.render('index');
 });
 
 /* GET copy */
@@ -345,16 +345,16 @@ router.get('/import', function(req, res, next) {
 });
 
 /* POST import */
-router.post('/import', function(req, res, next) {
+router.post('/import', upload.single('import_file'), function(req, res, next) {
     let errors = [];
     let message = null;
 
     let app_id = req.body.app_id;
     let app_key = req.body.app_key;
 
-    let import_file = null; if (req.body.import_file) import_file = req.body.import_file;
+    let import_file = null; if (req.file) import_file = req.file;
 
-
+    let copy_override = false; if (req.body.copy_override) copy_override = true;
 
     let client = null;
     if (app_id && app_key)
@@ -365,22 +365,88 @@ router.post('/import', function(req, res, next) {
         if (!import_file) {
             errors.push('Please provide a json file to import.');
         } else {
-            // parse imported file
-            fs.readFile(import_file, function (err, data) {
-                if (err) {
-                    throw err;
-                } else {
-                    let parsedFile = JSON.parse(data);
+            asyncJS.series([
+                function(callback) {
+                    if (copy_override) {
+                        client.listIndexes((err, content) => {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                for (let i = 0; i < content.items.length; i++) {
+                                    let indexName = content.items[i].name;
 
-                    let name = parsedFile.name;
-                    let settings = parsedFile.settings;
-                    let datas = parsedFile.datas;
+                                    client.deleteIndex(indexName, function(err) {
+                                        if (err) {
+                                            errors.push(err);
+                                        }
+                                    });
+                                }
+                                callback(null);
+                            }
+                        });
+                    } else {
+                        callback(null);
+                    }
+                },
+                function(callback) {
+                    // parse imported file
+                    fs.readFile(import_file.path, function (err, data) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            let parsedFile = JSON.parse(data);
+
+                            asyncJS.each(parsedFile, function(index, callback2) {
+                                let name = index.name;
+                                let settings = index.settings;
+                                let datas = index.datas;
+
+                                // create index
+                                let targetIndex = client.initIndex(name);
+
+                                // set index 2 settings, it will create it !
+                                targetIndex.setSettings(settings, (err, content) => {
+                                    if (!err) {
+                                        console.log(name + ' created in new algolia and setted up.');
+
+                                        if (datas != null && datas.length > 0) {
+                                            // add objects to destination index
+                                            targetIndex.addObjects(datas, (err, content) => {
+                                                if (err) errors.push(err);
+                                                callback2();
+                                            });
+                                        } else {
+                                            callback2();
+                                        }
+                                    } else {
+                                        callback2();
+                                    }
+                                });
+
+
+                            }, function(err) {
+                                callback();
+                            });
+                        }
+                    });
                 }
+            ], function(err) {
+                // delete the stored file
+                fs.unlinkSync(import_file.path);
+
+                // success
+                if (err) {
+                    console.log('async error', err);
+                } else {
+                    console.log('async success');
+                }
+                message = 'The file has been imported into the new environment.'
+                res.render('import', {errors: errors, message: message});
             });
         }
     } else {
         errors.push('Sorry, this environment doesn\'t exist.');
-        res.render('export', {errors: errors, message: message});
+        res.render('import', {errors: errors, message: message});
     }
 
 });

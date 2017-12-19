@@ -5,7 +5,7 @@ let logger = require('morgan');
 let cookieParser = require('cookie-parser');
 let bodyParser = require('body-parser');
 let helmet = require('helmet')
-var express_enforces_ssl = require('express-enforces-ssl');
+let express_enforces_ssl = require('express-enforces-ssl');
 
 let index = require('./routes/index');
 
